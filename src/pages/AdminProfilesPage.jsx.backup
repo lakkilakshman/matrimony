@@ -1,0 +1,401 @@
+
+import React, { useState } from 'react';
+import { Helmet } from 'react-helmet';
+import { motion, AnimatePresence } from 'framer-motion';
+import { UserCheck, Search, MapPin, Briefcase, GraduationCap, Heart, X, Eye, Edit2, Save, Phone, Mail, Calendar } from 'lucide-react';
+import AdminSidebar from '@/components/AdminSidebar';
+import { mockProfiles } from '@/data/mockProfiles';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+
+const AdminProfilesPage = () => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [genderFilter, setGenderFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [selectedProfile, setSelectedProfile] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const { toast } = useToast();
+
+    // Generate matrimony ID for profile
+    const getMatrimonyId = (profileId) => {
+        return `MKM${String(profileId).padStart(6, '0')}`;
+    };
+
+    // Filter profiles
+    const filteredProfiles = mockProfiles.filter(profile => {
+        const matchesSearch = `${profile.firstName} ${profile.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesGender = genderFilter === 'all' || profile.gender === genderFilter;
+        const matchesStatus = statusFilter === 'all' || profile.status === statusFilter;
+        return matchesSearch && matchesGender && matchesStatus;
+    });
+
+    const handleViewProfile = (profile) => {
+        setSelectedProfile(profile);
+        setIsEditing(false);
+    };
+
+    const handleClosePanel = () => {
+        setSelectedProfile(null);
+        setIsEditing(false);
+    };
+
+    const handleSaveProfile = () => {
+        toast({
+            title: 'Profile Updated',
+            description: 'Profile information has been updated successfully.',
+        });
+        setIsEditing(false);
+    };
+
+    const stats = [
+        { label: 'Total Profiles', value: mockProfiles.length, color: 'bg-blue-500' },
+        { label: 'Male', value: mockProfiles.filter(p => p.gender === 'male').length, color: 'bg-green-500' },
+        { label: 'Female', value: mockProfiles.filter(p => p.gender === 'female').length, color: 'bg-pink-500' },
+        { label: 'Active', value: mockProfiles.filter(p => p.status === 'active').length, color: 'bg-gold' }
+    ];
+
+    return (
+        <>
+            <Helmet>
+                <title>Profile Management - Admin Panel</title>
+            </Helmet>
+
+            <div className="flex min-h-screen bg-gradient-to-br from-cream to-white">
+                <AdminSidebar />
+
+                <div className={`flex-1 ml-64 transition-all duration-300 ${selectedProfile ? 'mr-[600px]' : ''}`}>
+                    <div className="p-8">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mb-8"
+                        >
+                            <h1 className="text-4xl font-bold text-maroon mb-2 flex items-center">
+                                <UserCheck className="h-10 w-10 mr-3 text-gold" />
+                                Profile Management
+                            </h1>
+                            <p className="text-maroon/70 text-lg">
+                                Manage and moderate user profiles ({filteredProfiles.length} profiles)
+                            </p>
+                        </motion.div>
+
+                        {/* Statistics */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            {stats.map((stat, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="bg-white rounded-xl shadow-lg border-2 border-gold/20 p-4"
+                                >
+                                    <div className={`${stat.color} w-12 h-12 rounded-lg flex items-center justify-center mb-3`}>
+                                        <Heart className="h-6 w-6 text-white" />
+                                    </div>
+                                    <p className="text-2xl font-bold text-maroon">{stat.value}</p>
+                                    <p className="text-sm text-maroon/60">{stat.label}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Filters */}
+                        <div className="bg-white rounded-xl shadow-lg border-2 border-gold/20 p-6 mb-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-maroon mb-2">
+                                        Search Profiles
+                                    </label>
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gold" />
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search by name..."
+                                            className="w-full pl-10 pr-4 py-2 border-2 border-gold rounded-lg focus:outline-none focus:ring-2 focus:ring-maroon text-maroon"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-maroon mb-2">
+                                        Gender
+                                    </label>
+                                    <select
+                                        value={genderFilter}
+                                        onChange={(e) => setGenderFilter(e.target.value)}
+                                        className="w-full px-4 py-2 border-2 border-gold rounded-lg focus:outline-none focus:ring-2 focus:ring-maroon text-maroon"
+                                    >
+                                        <option value="all">All Genders</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-maroon mb-2">
+                                        Status
+                                    </label>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        className="w-full px-4 py-2 border-2 border-gold rounded-lg focus:outline-none focus:ring-2 focus:ring-maroon text-maroon"
+                                    >
+                                        <option value="all">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Profiles Table */}
+                        <div className="bg-white rounded-xl shadow-lg border-2 border-gold/20 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-gradient-to-r from-maroon to-maroon-dark text-white">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold">Matrimony ID</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold">Profile</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold">Age</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold">Location</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold">Occupation</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gold/20">
+                                        {filteredProfiles.map((profile, index) => (
+                                            <motion.tr
+                                                key={profile.id}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                transition={{ delay: index * 0.05 }}
+                                                className={`hover:bg-cream/30 transition-colors ${selectedProfile?.id === profile.id ? 'bg-gold/10' : ''}`}
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <span className="font-mono text-sm font-semibold text-maroon bg-gold/20 px-2 py-1 rounded">
+                                                        {getMatrimonyId(profile.id)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div>
+                                                        <p className="font-semibold text-maroon">{profile.firstName} {profile.lastName}</p>
+                                                        <p className="text-sm text-maroon/60 capitalize">{profile.gender}</p>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-maroon">{profile.age} years</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm">
+                                                        <p className="text-maroon">{profile.city}</p>
+                                                        <p className="text-maroon/60">{profile.state}</p>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-maroon text-sm">{profile.occupation}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${profile.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                                                        }`}>
+                                                        {profile.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="border-gold text-maroon hover:bg-gold/10"
+                                                        onClick={() => handleViewProfile(profile)}
+                                                    >
+                                                        <Eye className="h-4 w-4 mr-1" />
+                                                        View
+                                                    </Button>
+                                                </td>
+                                            </motion.tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {filteredProfiles.length === 0 && (
+                                <div className="text-center py-12">
+                                    <p className="text-maroon/70">No profiles found matching your criteria</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Side Panel */}
+                <AnimatePresence>
+                    {selectedProfile && (
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 25 }}
+                            className="fixed right-0 top-0 h-screen w-[600px] bg-white shadow-2xl border-l-2 border-gold/20 overflow-y-auto z-40"
+                        >
+                            <div className="p-6">
+                                {/* Header */}
+                                <div className="flex items-center justify-between mb-6 sticky top-0 bg-white pb-4 border-b border-gold/20">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-maroon">Profile Details</h2>
+                                        <p className="text-sm text-maroon/60">Matrimony ID: {getMatrimonyId(selectedProfile.id)}</p>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        {!isEditing ? (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="border-gold text-maroon hover:bg-gold/10"
+                                                onClick={() => setIsEditing(true)}
+                                            >
+                                                <Edit2 className="h-4 w-4 mr-1" />
+                                                Edit
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                size="sm"
+                                                className="bg-green-500 text-white hover:bg-green-600"
+                                                onClick={handleSaveProfile}
+                                            >
+                                                <Save className="h-4 w-4 mr-1" />
+                                                Save
+                                            </Button>
+                                        )}
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="border-red-500 text-red-500 hover:bg-red-50"
+                                            onClick={handleClosePanel}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Profile Image */}
+                                <div className="mb-6">
+                                    <div className="w-full h-64 bg-gradient-to-br from-maroon to-maroon-dark rounded-xl flex items-center justify-center">
+                                        <div className="text-center text-white">
+                                            <div className="text-6xl font-bold mb-2">
+                                                {selectedProfile.firstName.charAt(0)}{selectedProfile.lastName.charAt(0)}
+                                            </div>
+                                            <p className="text-xl">{selectedProfile.firstName} {selectedProfile.lastName}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Profile Information Sections */}
+                                <div className="space-y-6">
+                                    {/* Basic Information */}
+                                    <div className="bg-cream/30 rounded-lg p-4">
+                                        <h3 className="text-lg font-semibold text-maroon mb-4 flex items-center">
+                                            <UserCheck className="h-5 w-5 mr-2 text-gold" />
+                                            Basic Information
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                                <label className="text-maroon/60">Full Name</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.firstName} {selectedProfile.lastName}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-maroon/60">Age</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.age} years</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-maroon/60">Gender</label>
+                                                <p className="font-semibold text-maroon capitalize">{selectedProfile.gender}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-maroon/60">Marital Status</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.maritalStatus}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-maroon/60">Height</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.height}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-maroon/60">Religion</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.religion}</p>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <label className="text-maroon/60">Caste</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.caste}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Education & Career */}
+                                    <div className="bg-cream/30 rounded-lg p-4">
+                                        <h3 className="text-lg font-semibold text-maroon mb-4 flex items-center">
+                                            <GraduationCap className="h-5 w-5 mr-2 text-gold" />
+                                            Education & Career
+                                        </h3>
+                                        <div className="grid grid-cols-1 gap-4 text-sm">
+                                            <div>
+                                                <label className="text-maroon/60">Education</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.education}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-maroon/60">Occupation</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.occupation}</p>
+                                            </div>
+                                            {selectedProfile.income && (
+                                                <div>
+                                                    <label className="text-maroon/60">Annual Income</label>
+                                                    <p className="font-semibold text-maroon">{selectedProfile.income}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Location */}
+                                    <div className="bg-cream/30 rounded-lg p-4">
+                                        <h3 className="text-lg font-semibold text-maroon mb-4 flex items-center">
+                                            <MapPin className="h-5 w-5 mr-2 text-gold" />
+                                            Location
+                                        </h3>
+                                        <div className="grid grid-cols-1 gap-4 text-sm">
+                                            <div>
+                                                <label className="text-maroon/60">City</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.city}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-maroon/60">State</label>
+                                                <p className="font-semibold text-maroon">{selectedProfile.state}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* About */}
+                                    {selectedProfile.bio && (
+                                        <div className="bg-cream/30 rounded-lg p-4">
+                                            <h3 className="text-lg font-semibold text-maroon mb-4">About</h3>
+                                            <p className="text-sm text-maroon">{selectedProfile.bio}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Status */}
+                                    <div className="bg-cream/30 rounded-lg p-4">
+                                        <h3 className="text-lg font-semibold text-maroon mb-4">Profile Status</h3>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm text-maroon/60">Current Status:</span>
+                                            <span className={`px-4 py-2 rounded-full text-sm font-semibold ${selectedProfile.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                                                }`}>
+                                                {selectedProfile.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        </>
+    );
+};
+
+export default AdminProfilesPage;
