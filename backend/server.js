@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const { testConnection } = require('./config/database');
@@ -57,7 +58,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Static files (uploaded images)
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve production build of frontend
+const distPath = path.join(__dirname, '../dist');
+app.use(express.static(distPath));
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -99,12 +104,21 @@ app.get('/', (req, res) => {
     });
 });
 
-// 404 handler
-app.use((req, res) => {
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
     res.status(404).json({
         success: false,
-        message: 'Route not found'
+        message: 'API Route not found'
     });
+});
+
+// Catch-all route for frontend (SPA)
+app.get('*', (req, res) => {
+    // Check if it's an API route that should have been caught above
+    if (req.originalUrl.startsWith('/api/')) {
+        return res.status(404).json({ success: false, message: 'API Route not found' });
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Global error handler
